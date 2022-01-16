@@ -7,7 +7,7 @@ import Loader from "../loader/Loader";
 import GalleryErrorView from "../imageGalleryError/ImageGalleryError";
 import Button from "../button/Button";
 import Modal from "../modal/Modal";
-
+import { ListStyled } from "./ImageGallery.styled";
 const Status = {
   IDLE: "idle",
   PENDING: "pending",
@@ -28,6 +28,7 @@ export default class ImageGallery extends Component {
 
   componentDidUpdate(prevProps, prevState) {
     if (prevProps.inputValue !== this.props.inputValue) {
+      this.setState({ images: [], page: 1 });
       this.fetchImages();
     }
   }
@@ -91,7 +92,7 @@ export default class ImageGallery extends Component {
     const { images, status, showModal, largeImageURL } = this.state;
 
     if (status === "idle") {
-      return <div>Please, type above what are you searching for</div>;
+      return <div></div>;
     }
 
     if (status === "pending") {
@@ -105,7 +106,7 @@ export default class ImageGallery extends Component {
     if (status === "resolved") {
       return (
         <>
-          <ul>
+          <ListStyled>
             {images?.map(({ id, webformatURL, largeImageURL }) => {
               return (
                 <ImageGalleryItem
@@ -116,7 +117,7 @@ export default class ImageGallery extends Component {
                 />
               );
             })}
-          </ul>
+          </ListStyled>
           <Button onClickButton={this.fetchImages} />
           {showModal && (
             <Modal onCloseModal={this.toggleModal}>

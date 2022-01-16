@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import { ToastContainer } from "react-toastify";
 import Searchbar from "../searchbar/Searchbar";
 import ImageGallery from "../imageGallery/ImageGallery";
-import "./App.css";
+import { AppStyled } from "./App.styled.js";
 
 export default class App extends Component {
   state = {
@@ -13,11 +13,11 @@ export default class App extends Component {
   };
   render() {
     return (
-      <>
+      <AppStyled>
         <Searchbar onSubmit={this.formSubmitHandler} />
         <ImageGallery inputValue={this.state.inputValue} />
         <ToastContainer autoClose={5000} />
-      </>
+      </AppStyled>
     );
   }
 }

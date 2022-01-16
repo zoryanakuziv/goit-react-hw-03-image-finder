@@ -1,9 +1,10 @@
 import React from "react";
 import PropTypes from "prop-types";
+import { Item } from "./ImageGalleryItem.styled";
 
 const ImageGalleryItem = ({ url, modalImage, largeImageURL }) => {
   return (
-    <li>
+    <Item>
       <img
         src={url}
         alt=""
@@ -12,7 +13,7 @@ const ImageGalleryItem = ({ url, modalImage, largeImageURL }) => {
         //className={styles.ImageGalleryItemImage}
         //data-source={largeImageURL}
       />
-    </li>
+    </Item>
   );
 };
 
