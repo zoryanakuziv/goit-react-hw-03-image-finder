@@ -8,68 +8,72 @@ import GalleryErrorView from "../imageGalleryError/ImageGalleryError";
 import Button from "../button/Button";
 import Modal from "../modal/Modal";
 import { ListStyled } from "./ImageGallery.styled";
-const Status = {
-  IDLE: "idle",
-  PENDING: "pending",
-  RESOLVED: "resolved",
-  REJECTED: "rejected",
-};
 
 export default class ImageGallery extends Component {
   state = {
-    status: Status.IDLE,
+    status: "idle",
     images: [],
     error: null,
     page: 1,
     largeImageURL: "",
-    showButton: true,
+    showButton: false,
     showModal: false,
   };
 
   componentDidUpdate(prevProps, prevState) {
     if (prevProps.inputValue !== this.props.inputValue) {
       this.setState({ images: [], page: 1 });
+    }
+    if (
+      (prevProps.inputValue !== this.props.inputValue &&
+        this.state.page === 1) ||
+      prevState.page !== this.state.page
+    ) {
+      this.setState({ status: "pending" });
       this.fetchImages();
     }
+    if (this.state.images.length - prevState.images.length === 12) {
+      this.setState({ showButton: true });
+    }
   }
-
   fetchImages = () => {
-    this.setState({ status: Status.PENDING });
-    setTimeout(() => {
-      pixabayAPI
-        .getImages(this.props.inputValue, this.state.page)
-        .then((images) => {
-          if (images.hits.length === 0) {
-            this.setState({ showButton: false });
-            toast.error(
-              `No results for "${this.props.inputValue}" . Please, enter something else.`
-            );
-            this.setState({ status: Status.IDLE });
-            return;
-          } else if (images.hits.length !== 12) {
-            toast("No more results found");
-            this.setState({ showButton: false });
-          }
-          this.setState((prevState) => {
-            return {
-              images: [...prevState.images, ...images.hits],
-              page: prevState.page + 1,
-              status: Status.RESOLVED,
-            };
-          });
-        })
-        .catch((error) =>
-          this.setState({
-            status: Status.REJECTED,
-            error: error.massege,
-            page: 1,
-            images: [],
-          })
-        )
-        .finally(() => {
-          this.scrollDown();
+    pixabayAPI
+      .getImages(this.props.inputValue, this.state.page)
+      .then((images) => {
+        if (images.hits.length === 0) {
+          toast.error(
+            `No results for "${this.props.inputValue}" . Please, enter something else.`
+          );
+          this.setState({ status: "idle" });
+          return;
+        } else if (images.hits.length < 12) {
+          this.setState({ showButton: false });
+          toast("No more results found");
+        }
+        this.setState((prevState) => {
+          return {
+            images: [...prevState.images, ...images.hits],
+            status: "resolved",
+          };
         });
-    }, 3000);
+      })
+      .catch((error) =>
+        this.setState({
+          status: "rejected",
+          error: error.massege,
+          page: 1,
+          images: [],
+        })
+      )
+      .finally(() => {
+        this.scrollDown();
+      });
+  };
+
+  onClickButton = () => {
+    this.setState((state) => ({
+      page: state.page + 1,
+    }));
   };
 
   scrollDown = () => {
@@ -89,43 +93,34 @@ export default class ImageGallery extends Component {
   };
 
   render() {
-    const { images, status, showModal, largeImageURL } = this.state;
-
-    if (status === "idle") {
-      return <div></div>;
-    }
-
-    if (status === "pending") {
-      return <Loader />;
-    }
+    const { images, status, showModal, showButton, largeImageURL } = this.state;
 
     if (status === "rejected") {
       return <GalleryErrorView />;
     }
 
-    if (status === "resolved") {
-      return (
-        <>
-          <ListStyled>
-            {images?.map(({ id, webformatURL, largeImageURL }) => {
-              return (
-                <ImageGalleryItem
-                  key={id}
-                  url={webformatURL}
-                  modalImage={this.handleModalImage}
-                  largeImageURL={largeImageURL}
-                />
-              );
-            })}
-          </ListStyled>
-          <Button onClickButton={this.fetchImages} />
-          {showModal && (
-            <Modal onCloseModal={this.toggleModal}>
-              <img src={largeImageURL} alt="" />
-            </Modal>
-          )}
-        </>
-      );
-    }
+    return (
+      <>
+        <ListStyled>
+          {images?.map(({ id, webformatURL, largeImageURL }) => {
+            return (
+              <ImageGalleryItem
+                key={id}
+                url={webformatURL}
+                modalImage={this.handleModalImage}
+                largeImageURL={largeImageURL}
+              />
+            );
+          })}
+        </ListStyled>
+        {showButton && <Button onClickButton={this.onClickButton} />}
+        {showModal && (
+          <Modal onCloseModal={this.toggleModal}>
+            <img src={largeImageURL} alt="" />
+          </Modal>
+        )}
+        {status === "pending" && <Loader />}
+      </>
+    );
   }
 }
